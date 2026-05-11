@@ -1,4 +1,3 @@
-streamlit
 Pandas
 plotly
 scikit-learn
