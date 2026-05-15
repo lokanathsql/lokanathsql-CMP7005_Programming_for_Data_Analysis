@@ -1,6 +1,7 @@
-Pandas
+pandas
 plotly
 scikit-learn
 numpy
 joblib
-Flask
+flask
+gunicorn
