@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Air Quality Dashboard</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:'Poppins', sans-serif;
+        }
+
+        body{
+            background: linear-gradient(135deg,#0f172a,#111827,#1e293b);
+            color:white;
+            overflow-x:hidden;
+        }
+
+        .navbar{
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(12px);
+            border-bottom:1px solid rgba(255,255,255,0.1);
+        }
+
+        .navbar-brand{
+            font-size:28px;
+            font-weight:700;
+            color:#00d4ff !important;
+        }
+
+        .dashboard-title{
+            font-size:42px;
+            font-weight:700;
+        }
+
+        .dashboard-subtitle{
+            color:#cbd5e1;
+        }
+
+        .glass-card{
+            background: rgba(255,255,255,0.06);
+            border-radius:22px;
+            backdrop-filter: blur(15px);
+            border:1px solid rgba(255,255,255,0.08);
+            padding:25px;
+            box-shadow:0 8px 32px rgba(0,0,0,0.3);
+            transition:0.3s;
+        }
+
+        .glass-card:hover{
+            transform:translateY(-4px);
+            box-shadow:0 12px 40px rgba(0,0,0,0.4);
+        }
+
+        .form-control{
+            background: rgba(255,255,255,0.08);
+            border:none;
+            color:white;
+            height:52px;
+            border-radius:12px;
+        }
+
+        .form-control:focus{
+            background: rgba(255,255,255,0.12);
+            color:white;
+            box-shadow:none;
+            border:1px solid #00d4ff;
+        }
+
+        .btn-predict{
+            background: linear-gradient(135deg,#00d4ff,#3b82f6);
+            border:none;
+            color:white;
+            font-weight:600;
+            padding:14px;
+            border-radius:12px;
+            transition:0.3s;
+        }
+
+        .btn-predict:hover{
+            transform:scale(1.03);
+        }
+
+        .result-card{
+            text-align:center;
+            padding:40px;
+            border-radius:25px;
+        }
+
+        .prediction-value{
+            font-size:60px;
+            font-weight:700;
+        }
+
+        .aqi-category{
+            font-size:30px;
+            font-weight:600;
+        }
+
+        .pollutant-card{
+            text-align:center;
+            padding:20px;
+            border-radius:20px;
+        }
+
+        .pollutant-value{
+            font-size:28px;
+            font-weight:700;
+        }
+
+        .section-title{
+            font-size:26px;
+            font-weight:600;
+            margin-bottom:20px;
+        }
+
+        .insight-item{
+            background:rgba(255,255,255,0.05);
+            padding:15px;
+            border-radius:12px;
+            margin-bottom:12px;
+        }
+
+        table{
+            color:white !important;
+        }
+
+        footer{
+            text-align:center;
+            padding:30px;
+            color:#94a3b8;
+        }
+
+        canvas{
+            max-height:350px;
+        }
+
+        .weather-box{
+            text-align:center;
+            padding:20px;
+        }
+
+        .weather-value{
+            font-size:24px;
+            font-weight:700;
+        }
+
+        .icon-large{
+            font-size:50px;
+            margin-bottom:12px;
+        }
+
+        .form-text{
+            color:#94a3b8 !important;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+
+    <nav class="navbar navbar-expand-lg navbar-dark py-3">
+
+        <div class="container">
+
+            <a class="navbar-brand" href="#">
+                <i class="fa-solid fa-wind"></i>
+                AI Air Quality Dashboard
+            </a>
+
+        </div>
+
+    </nav>
+
+    <!-- MAIN -->
+
+    <div class="container py-5">
+
+        <!-- TITLE -->
+
+        <div class="text-center mb-5">
+
+            <h1 class="dashboard-title">
+                Smart Environmental Analytics System
+            </h1>
+
+            <p class="dashboard-subtitle">
+                AI-powered pollution prediction and environmental monitoring dashboard
+            </p>
+
+        </div>
+
+        <!-- FORM + RESULT -->
+
+        <div class="row g-4">
+
+            <!-- FORM -->
+
+            <div class="col-lg-5">
+
+                <div class="glass-card">
+
+                    <h3 class="section-title">
+                        <i class="fa-solid fa-sliders"></i>
+                        Environmental Inputs
+                    </h3>
+
+                    <form action="/predict" method="POST">
+
+                        <div class="mb-3">
+
+                            <label>Temperature (°C)</label>
+
+                            <input 
+                                type="number"
+                                step="0.1"
+                                class="form-control"
+                                name="TEMP"
+                                placeholder="Example: 25"
+                                min="-20"
+                                max="50"
+                                required
+                            >
+
+                            <div class="form-text">
+                                Recommended range: -20°C to 50°C
+                            </div>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label>Pressure (hPa)</label>
+
+                            <input 
+                                type="number"
+                                step="0.1"
+                                class="form-control"
+                                name="PRES"
+                                placeholder="Example: 1012"
+                                min="980"
+                                max="1050"
+                                required
+                            >
+
+                            <div class="form-text">
+                                Recommended range: 980 to 1050 hPa
+                            </div>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label>Dew Point (°C)</label>
+
+                            <input 
+                                type="number"
+                                step="0.1"
+                                class="form-control"
+                                name="DEWP"
+                                placeholder="Example: 12"
+                                min="-40"
+                                max="35"
+                                required
+                            >
+
+                            <div class="form-text">
+                                Recommended range: -40°C to 35°C
+                            </div>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label>Rain (mm)</label>
+
+                            <input 
+                                type="number"
+                                step="0.1"
+                                class="form-control"
+                                name="RAIN"
+                                placeholder="Example: 0.5"
+                                min="0"
+                                max="100"
+                                required
+                            >
+
+                            <div class="form-text">
+                                Recommended range: 0 to 100 mm
+                            </div>
+
+                        </div>
+
+                        <div class="mb-4">
+
+                            <label>Wind Speed (m/s)</label>
+
+                            <input 
+                                type="number"
+                                step="0.1"
+                                class="form-control"
+                                name="WSPM"
+                                placeholder="Example: 3.2"
+                                min="0"
+                                max="20"
+                                required
+                            >
+
+                            <div class="form-text">
+                                Recommended range: 0 to 20 m/s
+                            </div>
+
+                        </div>
+
+                        <button class="btn btn-predict w-100">
+                            <i class="fa-solid fa-brain"></i>
+                            Predict Air Quality
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            <!-- RESULT -->
+
+            <div class="col-lg-7">
+
+                <div class="glass-card result-card">
+
+                    {% if prediction %}
+
+                    <div class="icon-large">
+                        {{ icon }}
+                    </div>
+
+                    <h2>Predicted PM2.5</h2>
+
+                    <div class="prediction-value"
+                        style="color: {{ color }}">
+                        {{ prediction }}
+                    </div>
+
+                    <div class="aqi-category"
+                        style="color: {{ color }}">
+                        {{ category }}
+                    </div>
+
+                    <p class="mt-3">
+                        {{ health }}
+                    </p>
+
+                    {% else %}
+
+                    <div class="py-5">
+
+                        <i class="fa-solid fa-cloud fa-4x mb-4 text-info"></i>
+
+                        <h3>
+                            Awaiting Prediction
+                        </h3>
+
+                        <p>
+                            Enter environmental conditions to analyze air quality
+                        </p>
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% if prediction %}
+
+        <!-- POLLUTANT CARDS -->
+
+        <div class="row mt-5 g-4">
+
+            <div class="col-md-2">
+                <div class="glass-card pollutant-card">
+                    <h6>PM2.5</h6>
+                    <div class="pollutant-value">{{ pm25 }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <div class="glass-card pollutant-card">
+                    <h6>PM10</h6>
+                    <div class="pollutant-value">{{ pm10 }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <div class="glass-card pollutant-card">
+                    <h6>NO2</h6>
+                    <div class="pollutant-value">{{ no2 }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <div class="glass-card pollutant-card">
+                    <h6>CO</h6>
+                    <div class="pollutant-value">{{ co }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <div class="glass-card pollutant-card">
+                    <h6>O3</h6>
+                    <div class="pollutant-value">{{ o3 }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <div class="glass-card pollutant-card">
+                    <h6>SO2</h6>
+                    <div class="pollutant-value">{{ so2 }}</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- WEATHER -->
+
+        <div class="row mt-5 g-4">
+
+            <div class="col-md-4">
+                <div class="glass-card weather-box">
+                    <i class="fa-solid fa-temperature-high fa-2x text-danger"></i>
+                    <h5 class="mt-3">Temperature</h5>
+                    <div class="weather-value">{{ temp }} °C</div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="glass-card weather-box">
+                    <i class="fa-solid fa-wind fa-2x text-info"></i>
+                    <h5 class="mt-3">Wind Speed</h5>
+                    <div class="weather-value">{{ wspm }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="glass-card weather-box">
+                    <i class="fa-solid fa-cloud-rain fa-2x text-primary"></i>
+                    <h5 class="mt-3">Rain</h5>
+                    <div class="weather-value">{{ rain }}</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- CHARTS -->
+
+        <div class="row mt-5 g-4">
+
+            <div class="col-lg-6">
+
+                <div class="glass-card">
+
+                    <h3 class="section-title">
+                        Feature Importance
+                    </h3>
+
+                    <canvas id="featureChart"></canvas>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-6">
+
+                <div class="glass-card">
+
+                    <h3 class="section-title">
+                        Pollution Metrics
+                    </h3>
+
+                    <canvas id="pollutionChart"></canvas>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- INSIGHTS -->
+
+        <div class="glass-card mt-5">
+
+            <h3 class="section-title">
+                AI Environmental Insights
+            </h3>
+
+            {% for insight in insights %}
+
+            <div class="insight-item">
+                <i class="fa-solid fa-circle-info text-info"></i>
+                {{ insight }}
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <!-- MODEL PERFORMANCE -->
+
+        <div class="glass-card mt-5">
+
+            <h3 class="section-title">
+                Machine Learning Model Performance
+            </h3>
+
+            <div class="table-responsive">
+
+                <table class="table table-dark table-hover">
+
+                    <thead>
+
+                        <tr>
+                            <th>Model</th>
+                            <th>RMSE</th>
+                            <th>R² Score</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for model, metrics in model_results.items() %}
+
+                        <tr>
+                            <td>{{ model }}</td>
+                            <td>{{ metrics.RMSE }}</td>
+                            <td>{{ metrics.R2 }}</td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+    <!-- FOOTER -->
+
+    <footer>
+
+        © {{ current_year }} AI Environmental Analytics Dashboard
+
+    </footer>
+
+    <!-- CHARTS -->
+
+    {% if prediction %}
+
+    <script>
+
+        // FEATURE IMPORTANCE CHART
+
+        const featureCtx = document.getElementById('featureChart');
+
+        new Chart(featureCtx, {
+
+            type: 'bar',
+
+            data: {
+
+                labels: ['TEMP', 'DEWP', 'PRES', 'WSPM', 'RAIN'],
+
+                datasets: [{
+
+                    label: 'Importance',
+
+                    data: [0.302, 0.297, 0.238, 0.145, 0.016],
+
+                    borderWidth: 2
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                plugins: {
+
+                    legend: {
+
+                        labels: {
+                            color: 'white'
+                        }
+
+                    }
+
+                },
+
+                scales: {
+
+                    x: {
+                        ticks: {
+                            color: 'white'
+                        }
+                    },
+
+                    y: {
+                        ticks: {
+                            color: 'white'
+                        }
+                    }
+
+                }
+
+            }
+
+        });
+
+        // POLLUTION RADAR CHART
+
+        const pollutionCtx = document.getElementById('pollutionChart');
+
+        new Chart(pollutionCtx, {
+
+            type: 'radar',
+
+            data: {
+
+                labels: ['PM2.5', 'PM10', 'NO2', 'CO', 'O3', 'SO2'],
+
+                datasets: [{
+
+                    label: 'Pollution Levels',
+
+                    data: [
+                        {{ pm25 }},
+                        {{ pm10 }},
+                        {{ no2 }},
+                        {{ co }},
+                        {{ o3 }},
+                        {{ so2 }}
+                    ],
+
+                    borderWidth: 2
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                plugins: {
+
+                    legend: {
+
+                        labels: {
+                            color: 'white'
+                        }
+
+                    }
+
+                },
+
+                scales: {
+
+                    r: {
+
+                        pointLabels: {
+                            color: 'white'
+                        },
+
+                        ticks: {
+                            color: 'white'
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    </script>
+
+    {% endif %}
+
+</body>
+
+</html>
